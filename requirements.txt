@@ -21,3 +21,4 @@ SQLAlchemy==1.4.42
 starlette==0.14.2
 typing-extensions==4.4.0
 uvicorn==0.15.0
+gunicorn
