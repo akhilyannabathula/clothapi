@@ -176,7 +176,9 @@ async def login_for_access_token(auth_user: AuthUser):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-
+@app.get("/")
+def read_root():
+    return {"status": "UP"}
 
 
 @app.get("/health")
