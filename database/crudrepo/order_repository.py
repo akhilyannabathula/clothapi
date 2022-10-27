@@ -1,7 +1,7 @@
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
-from app.models import pydantic_models
-from app.database.entities import models
+from models import pydantic_models
+from database.entities import models
 
 def create_order(db: Session, order : pydantic_models.OrdersCreate):
     db_order = models.Orders( customer_name = order.customer_name)
