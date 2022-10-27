@@ -186,7 +186,10 @@ def read_root():
 
 @app.post("/orders")
 def place_order(data: pydantic_models.OrdersCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.create_order(db, data)
+    try:
+        return order_repository.create_order(db, data)
+    except Exception as e:
+        return {"exception": str(e)}
 
 @app.get("/orders")
 def get_all_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
