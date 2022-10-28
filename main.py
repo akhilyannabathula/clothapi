@@ -6,7 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from models import pydantic_models
 from database.crudrepo import order_repository
-from database.config.dbconfig import SessionLocal,engine
+from database.config.dbconfig import SessionLocal, engine
 from database.entities import models
 from fastapi.responses import FileResponse
 from datetime import datetime, timedelta
@@ -18,7 +18,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 import datetime
+import pandas as pd
 
+from models.pydantic_models import GarmentType
 
 app = FastAPI()
 
@@ -33,10 +35,9 @@ app.add_middleware(
 )
 
 
+# models.Base.metadata.create_all(bind=engine)
 
-#models.Base.metadata.create_all(bind=engine)
-
-#Dependency
+# Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -45,12 +46,9 @@ def get_db():
         db.close()
 
 
-
-
-
-
-
-
+def get_date():
+    print("get date called")
+    return datetime.date.today().replace(day=1)
 
 
 # to get a string like this run:
@@ -58,7 +56,6 @@ def get_db():
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
 
 fake_users_db = {
     "akhil": {
@@ -70,9 +67,11 @@ fake_users_db = {
     }
 }
 
+
 class AuthUser(BaseModel):
-    username : str
-    password : str
+    username: str
+    password: str
+
 
 class Token(BaseModel):
     access_token: str
@@ -96,9 +95,8 @@ class UserInDB(User):
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-#oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 oauth2_scheme = HTTPBearer()
-
 
 
 def verify_password(plain_password, hashed_password):
@@ -130,7 +128,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
-    #to_encode.update({"exp": expire})
+    # to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -188,58 +186,89 @@ def read_root():
 
 
 @app.post("/orders")
-def place_order(data: pydantic_models.OrdersCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+def place_order(data: pydantic_models.OrdersCreate, db: Session = Depends(get_db),
+                current_user: User = Depends(get_current_active_user)):
     try:
         return order_repository.create_order(db, data)
     except Exception as e:
         return {"exception": str(e)}
 
+
 @app.get("/orders")
 def get_all_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     return order_repository.get_orders(db)
 
+
 @app.get("/recent_orders")
-def get_recent_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user) ):
+def get_recent_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     return order_repository.get_recent_orders(db)
 
+
 @app.get("/recent_items")
-def get_recent_items(db: Session = Depends(get_db), from_date: Optional[datetime.date] = None ,to_date: Optional[datetime.date] = datetime.date.today() ,current_user: User = Depends(get_current_active_user)):
+def get_recent_items(db: Session = Depends(get_db), from_date: Optional[datetime.date] = None,
+                     to_date: Optional[datetime.date] = datetime.date.today(),
+                     current_user: User = Depends(get_current_active_user)):
     if from_date == None:
         return order_repository.get_recent_items(db)
     else:
         return order_repository.get_recent_items_between(db, from_date, to_date)
 
+
 @app.delete("/item/{id}")
-def delete_item_by_id( id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.delete_item_by_id(db,id)
+def delete_item_by_id(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    return order_repository.delete_item_by_id(db, id)
 
 
 @app.get("/item/{id}")
-def get_item_by_id( id: int,  db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.get_item(db,id)
+def get_item_by_id(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    return order_repository.get_item(db, id)
+
 
 @app.get("/order/{id}")
-def get_order_by_id( id: int,  db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.get_order(db,id)
+def get_order_by_id(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    return order_repository.get_order(db, id)
+
 
 @app.put("/order_and_items")
-def update_order_and_items(data: pydantic_models.Orders, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.update_order_and_items( db, data )
+def update_order_and_items(data: pydantic_models.Orders, db: Session = Depends(get_db),
+                           current_user: User = Depends(get_current_active_user)):
+    return order_repository.update_order_and_items(db, data)
+
 
 @app.put("/order")
-def update_order(data: pydantic_models.UpdateOrders, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.update_order( db, data )
+def update_order(data: pydantic_models.UpdateOrders, db: Session = Depends(get_db),
+                 current_user: User = Depends(get_current_active_user)):
+    return order_repository.update_order(db, data)
+
 
 @app.put("/item")
-def update_item(data: pydantic_models.Item, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.update_item( db, data )
+def update_item(data: pydantic_models.Item, db: Session = Depends(get_db),
+                current_user: User = Depends(get_current_active_user)):
+    return order_repository.update_item(db, data)
+
 
 @app.get("/download_db")
 def download_database_file(current_user: User = Depends(get_current_active_user)):
     path = 'clothe_store.db'
-    return FileResponse(path=path,filename=path,media_type='application/octet-stream')
+    return FileResponse(path=path, filename=path, media_type='application/octet-stream')
 
 
+@app.get("/stats")
+def get_recent_items(db: Session = Depends(get_db), from_date: datetime.date = None,
+                     to_date: Optional[datetime.date] = datetime.date.today()):
+    if from_date is None:
+        from_date = get_date()
+    data = pd.read_sql(db.query(models.Items).filter(models.Items.date.between(from_date, to_date)).statement, db.bind)
+    size_stats = {}
+    price_stats = {}
+    for garment_type in GarmentType:
+        filtered_data = data[data['item_type'] == garment_type.value]
+        size_stats[garment_type.value] = dict(
+            [key, int(value)] for key, value in dict(filtered_data['size'].value_counts()).items())
+        price_stats[garment_type.value] = int(filtered_data['sold_price'].sum())
+    price_stats['total'] = int(data['sold_price'].sum())
+    print(size_stats)
+    return {"size_stats": size_stats, "price_stats": price_stats}
 
 
 if __name__ == "__main__":

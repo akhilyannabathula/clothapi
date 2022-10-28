@@ -26,7 +26,9 @@ class Items(Base):
     order_id = Column(Integer, ForeignKey("orders.id"))
     sold_price = Column(Integer)
     source = Column(String)
+    size = Column(String)
     order = relationship("Orders", back_populates="items")
+
 
 
 
