@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 from models import pydantic_models
@@ -13,19 +15,22 @@ def create_order(db: Session, order : pydantic_models.OrdersCreate):
     db.refresh(db_order)
     return db_order
 
-def get_orders(db: Session, skip: int = 0, limit: int = 100):
+def get_orders(db: Session, skip: int = 0, limit: int = 1000):
     return db.query(models.Orders).options( joinedload('items') ).offset(skip).limit(limit).all()
 
 
-def get_items(db: Session, skip: int = 0, limit: int = 100):
+def get_items(db: Session, skip: int = 0, limit: int = 1000):
     return db.query(models.Items).options( joinedload('order') ).offset(skip).limit(limit).all()
 
 
-def get_recent_items(db: Session, skip: int = 0, limit: int = 100):
+def get_recent_items(db: Session, skip: int = 0, limit: int = 1000):
     return db.query(models.Items).options( joinedload('order') ).order_by(
     desc(models.Items.id)).offset(skip).limit(limit).all()
 
-def get_recent_orders(db: Session, skip: int = 0, limit: int = 100):
+def get_recent_items_between(db: Session, from_date : datetime.date, to_date : datetime.date):
+    return db.query(models.Items).filter(models.Items.date.between(from_date,to_date)).all()
+
+def get_recent_orders(db: Session, skip: int = 0, limit: int = 1000):
     return db.query(models.Orders).options( joinedload('items') ).order_by(
     desc(models.Orders.id) ).offset(skip).limit(limit).all()
 
@@ -33,7 +38,7 @@ def get_order(db: Session, order_id: int):
     return db.query(models.Orders).options(joinedload('items')).filter(models.Orders.id == order_id).first()
 
 def get_item(db: Session, item_id: int):
-    return db.query(models.Items).options(joinedload('orders')).filter(models.Items.id == item_id).first()
+    return db.query(models.Items).options(joinedload('order')).filter(models.Items.id == item_id).first()
 
 def update_order_and_items(db: Session, order : pydantic_models.OrdersCreate):
 
@@ -43,11 +48,19 @@ def update_order_and_items(db: Session, order : pydantic_models.OrdersCreate):
     for item in order.items:
         update_item(db,item=item)
 
-
-
     db.commit()
     db.refresh(db_order)
     return db_order
+
+def delete_item_by_id(db: Session, id: int):
+    item = get_item(db=db,item_id=id)
+    db.delete(item)
+    db.commit()
+    return item
+
+
+
+
 
 def update_order(db: Session, order : pydantic_models.OrdersCreate):
     db_order = get_order(db, order.id)
@@ -65,6 +78,6 @@ def update_item(db: Session, item : pydantic_models.Item):
     # db.refresh(db_item)
     resp = db.query(models.Items).filter( models.Items.id == item.id ).update( dict(item) )
     db.commit()
-    return resp
+    return item
 
 

@@ -10,13 +10,14 @@ from database.config.dbconfig import SessionLocal,engine
 from database.entities import models
 from fastapi.responses import FileResponse
 from datetime import datetime, timedelta
-from typing import Union
+from typing import Union, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+import datetime
 
 
 app = FastAPI()
@@ -202,8 +203,15 @@ def get_recent_orders(db: Session = Depends(get_db), current_user: User = Depend
     return order_repository.get_recent_orders(db)
 
 @app.get("/recent_items")
-def get_recent_items(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.get_recent_items(db)
+def get_recent_items(db: Session = Depends(get_db), from_date: Optional[datetime.date] = None ,to_date: Optional[datetime.date] = datetime.date.today() ,current_user: User = Depends(get_current_active_user)):
+    if from_date == None:
+        return order_repository.get_recent_items(db)
+    else:
+        return order_repository.get_recent_items_between(db, from_date, to_date)
+
+@app.delete("/item/{id}")
+def delete_item_by_id( id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    return order_repository.delete_item_by_id(db,id)
 
 
 @app.get("/item/{id}")
@@ -230,6 +238,7 @@ def update_item(data: pydantic_models.Item, db: Session = Depends(get_db), curre
 def download_database_file(current_user: User = Depends(get_current_active_user)):
     path = 'clothe_store.db'
     return FileResponse(path=path,filename=path,media_type='application/octet-stream')
+
 
 
 
