@@ -22,3 +22,5 @@ starlette==0.14.2
 typing-extensions==4.4.0
 uvicorn==0.15.0
 gunicorn
+numpy==1.23.4
+pandas==1.5.1
