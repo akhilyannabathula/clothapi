@@ -37,6 +37,7 @@ class Item(BaseModel):
 class UpdateOrders(BaseModel):
     id: int
     customer_name: str
+    phone_number: str
 
     class Config:
         orm_mode = True
@@ -46,6 +47,7 @@ class Orders(BaseModel):
     id: int
     customer_name: str
     items: List[Item]
+    phone_number: str
 
     class Config:
         orm_mode = True
@@ -65,6 +67,7 @@ class ItemCreate(BaseModel):
 class OrdersCreate(BaseModel):
     customer_name: str
     items: List[ItemCreate]
+    phone_number: str
 
     class Config:
         orm_mode = True

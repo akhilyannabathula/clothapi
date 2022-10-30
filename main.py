@@ -216,7 +216,10 @@ def get_recent_items(db: Session = Depends(get_db), from_date: Optional[datetime
 
 @app.delete("/item/{id}")
 def delete_item_by_id(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.delete_item_by_id(db, id)
+    try:
+        return order_repository.delete_item_by_id(db, id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.get("/item/{id}")
