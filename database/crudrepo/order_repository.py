@@ -34,6 +34,11 @@ def get_recent_items_between(db: Session, from_date: datetime.date, to_date: dat
     return db.query(models.Items).filter(models.Items.date.between(from_date, to_date)).all()
 
 
+def get_recent_orders_between(db: Session, from_date: datetime.date, to_date: datetime.date):
+    return db.query(models.Orders).options(joinedload('items')).filter(
+        models.Orders.date.between(from_date, to_date)).all()
+
+
 def get_recent_orders(db: Session, skip: int = 0, limit: int = 1000):
     return db.query(models.Orders).options(joinedload('items')).order_by(
         desc(models.Orders.id)).offset(skip).limit(limit).all()

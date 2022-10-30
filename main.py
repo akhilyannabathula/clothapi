@@ -200,15 +200,19 @@ def get_all_orders(db: Session = Depends(get_db), current_user: User = Depends(g
 
 
 @app.get("/recent_orders")
-def get_recent_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return order_repository.get_recent_orders(db)
+def get_recent_orders(db: Session = Depends(get_db), from_date: Optional[datetime.date] = None,
+                      to_date: Optional[datetime.date] = datetime.date.today(),
+                      current_user: User = Depends(get_current_active_user)):
+    if from_date is None:
+        return order_repository.get_recent_orders(db)
+    return order_repository.get_recent_orders_between(db, from_date, to_date)
 
 
 @app.get("/recent_items")
 def get_recent_items(db: Session = Depends(get_db), from_date: Optional[datetime.date] = None,
                      to_date: Optional[datetime.date] = datetime.date.today(),
                      current_user: User = Depends(get_current_active_user)):
-    if from_date == None:
+    if from_date is None:
         return order_repository.get_recent_items(db)
     else:
         return order_repository.get_recent_items_between(db, from_date, to_date)
