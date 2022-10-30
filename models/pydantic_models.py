@@ -19,6 +19,7 @@ class GarmentSource(str, Enum):
     AJIO = "ajio"
     BANGLORE = "banglore"
     ONLINE = "online"
+    OTHER = "other"
 
 
 class Item(BaseModel):
