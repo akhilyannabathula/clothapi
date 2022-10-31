@@ -263,19 +263,24 @@ def download_database_file(current_user: User = Depends(get_current_active_user)
 @app.get("/stats")
 def get_recent_items(db: Session = Depends(get_db), from_date: datetime.date = None,
                      to_date: Optional[datetime.date] = datetime.date.today()):
-    if from_date is None:
-        from_date = get_date()
-    data = pd.read_sql(db.query(models.Items).filter(models.Items.date.between(from_date, to_date)).statement, db.bind)
-    size_stats = {}
-    price_stats = {}
-    for garment_type in GarmentType:
-        filtered_data = data[data['item_type'] == garment_type.value]
-        size_stats[garment_type.value] = dict(
-            [key, int(value)] for key, value in dict(filtered_data['size'].value_counts()).items())
-        price_stats[garment_type.value] = int(filtered_data['sold_price'].sum())
-    price_stats['total'] = int(data['sold_price'].sum())
-    print(size_stats)
-    return {"size_stats": size_stats, "price_stats": price_stats}
+    try:
+        if from_date is None:
+            from_date = get_date()
+        data = pd.read_sql(db.query(models.Items).filter(models.Items.date.between(from_date, to_date)).statement, db.bind)
+        size_stats = {}
+        price_stats = {}
+        for garment_type in GarmentType:
+            filtered_data = data[data['item_type'] == garment_type.value]
+            size_stats[garment_type.value] = dict(
+                [key, int(value)] for key, value in dict(filtered_data['size'].value_counts()).items())
+            size_stats[garment_type.value]['total'] = filtered_data.shape[0]
+            price_stats[garment_type.value] = int(filtered_data['sold_price'].sum())
+        price_stats['total'] = int(data['sold_price'].sum())
+        print(size_stats)
+        return {"size_stats": size_stats, "price_stats": price_stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 if __name__ == "__main__":
