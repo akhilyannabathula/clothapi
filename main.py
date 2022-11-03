@@ -164,8 +164,8 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 
 
 # @app.on_event("startup")
-# @repeat_every(seconds=5)
-# def check_health():
+# @repeat_every(seconds=60*10)
+# async def check_health():
 #     print("calling health")
 #     response = requests.get(url='https://cloth-api.onrender.com/health')
 #     print(response)
@@ -194,6 +194,8 @@ def upload_db():
                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
     print("shutdown started--->")
     try:
+        # body = open(file='clothe_store.db', mode='rb', encoding='utf-8')
+        # s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
         s3.upload_file('clothe_store.db','clothapidb','clothe_store.db')
         print('database uploaded successfully')
     except Exception as e:
