@@ -223,6 +223,20 @@ def read_root():
     return {"status": "UP"}
 
 
+@app.post("/save-database")
+def upload_db_to_filebase():
+    s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
+                      aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
+    print("uploading db")
+    try:
+        data_base_body = open('clothe_store.db')
+        s3.put_object(Body=data_base_body, Bucket='clothapidb', key='clothe_store.db')
+        return {'status': 'database downloaded successfully'}
+    except Exception as e:
+        print(str(e))
+        return {'exception': str(e)}
+
+
 @app.post("/orders")
 def place_order(data: pydantic_models.OrdersCreate, db: Session = Depends(get_db),
                 current_user: User = Depends(get_current_active_user)):
