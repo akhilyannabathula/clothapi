@@ -127,10 +127,10 @@ def authenticate_user(fake_db, username: str, password: str):
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+    # if expires_delta:
+    #     expire = datetime.utcnow() + expires_delta
+    # else:
+    #     expire = datetime.utcnow() + timedelta(minutes=15)
     # to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -176,26 +176,25 @@ def download_db():
     print("following is th bucket list")
     print(s3.list_buckets())
     try:
-        s3.dowload_file('clothapidb', 'clothe_store.db', 'clothe_store.db')
+        s3.download_file('clothapidb', 'clothe_store.db', 'clothe_store.db')
         print('database downloaded successfully')
     except Exception as e:
-        print("exception occurred downloading db ->"+str(e))
+        print("exception occurred downloading db ->" + str(e))
         Base.metadata.create_all(bind=engine)
         print('database created locally')
 
 
-
-
-
-
 @app.on_event("shutdown")
-def download_db():
+def upload_db():
     s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
     print("shutdown started--->")
-    data_base_body = open('clothe_store.db')
-    s3.put_object(Body=data_base_body, Bucket='clothapidb', key='clothe_store.db')
-    print('database downloaded succesfully')
+    try:
+        data_base_body = open('clothe_store.db')
+        s3.put_object(Body=data_base_body, Bucket='clothapidb', key='clothe_store.db')
+        print('database downloaded successfully')
+    except Exception as e:
+        print("exception occurred while uploading db" + str(e))
 
 
 @app.post("/token", response_model=Token)
