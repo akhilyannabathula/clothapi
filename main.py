@@ -180,7 +180,6 @@ def download_db():
         print('database downloaded successfully')
     except Exception as e:
         print("exception occurred downloading db ->" + str(e))
-        Base.metadata.create_all(bind=engine)
         print('database created locally')
     finally:
         print('application started')
@@ -197,6 +196,8 @@ def upload_db():
         print('database downloaded successfully')
     except Exception as e:
         print("exception occurred while uploading db" + str(e))
+    finally:
+        print("application closed")
 
 
 @app.post("/token", response_model=Token)
