@@ -6,7 +6,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from models import pydantic_models
 from database.crudrepo import order_repository
-from database.config.dbconfig import SessionLocal, engine
+from database.config.dbconfig import SessionLocal, engine, Base
 from database.entities import models
 from fastapi.responses import FileResponse
 from datetime import datetime, timedelta
@@ -19,8 +19,10 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 import datetime
 import pandas as pd
+from fastapi_utils.tasks import repeat_every
 
 from models.pydantic_models import GarmentType
+import boto3
 
 app = FastAPI()
 
@@ -160,6 +162,42 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 
+# @app.on_event("startup")
+# @repeat_every(seconds=5)
+# def check_health():
+#     print("calling health")
+
+
+@app.on_event("startup")
+def download_db():
+    print('startup event')
+    s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
+                      aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
+    print("following is th bucket list")
+    print(s3.list_buckets())
+    try:
+        s3.dowload_file('clothapidb', 'clothe_store.db', 'clothe_store.db')
+        print('database downloaded successfully')
+    except Exception as e:
+        print("exception occurred downloading db ->"+str(e))
+        Base.metadata.create_all(bind=engine)
+        print('database created locally')
+
+
+
+
+
+
+@app.on_event("shutdown")
+def download_db():
+    s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
+                      aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
+    print("shutdown started--->")
+    data_base_body = open('clothe_store.db')
+    s3.put_object(Body=data_base_body, Bucket='clothapidb', key='clothe_store.db')
+    print('database downloaded succesfully')
+
+
 @app.post("/token", response_model=Token)
 async def login_for_access_token(auth_user: AuthUser):
     user = authenticate_user(fake_users_db, auth_user.username, auth_user.password)
@@ -267,7 +305,8 @@ def get_recent_items(db: Session = Depends(get_db), from_date: datetime.date = N
     try:
         if from_date is None:
             from_date = get_date()
-        data = pd.read_sql(db.query(models.Items).filter(models.Items.date.between(from_date, to_date)).statement, db.bind)
+        data = pd.read_sql(db.query(models.Items).filter(models.Items.date.between(from_date, to_date)).statement,
+                           db.bind)
         size_stats = {}
         price_stats = {}
         for garment_type in GarmentType:
@@ -281,7 +320,6 @@ def get_recent_items(db: Session = Depends(get_db), from_date: datetime.date = N
         return {"size_stats": size_stats, "price_stats": price_stats}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 if __name__ == "__main__":

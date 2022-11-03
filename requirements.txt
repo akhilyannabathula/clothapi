@@ -24,3 +24,5 @@ uvicorn==0.15.0
 gunicorn
 numpy==1.23.4
 pandas==1.5.1
+boto3
+fastapi_utils
