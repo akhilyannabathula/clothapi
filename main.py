@@ -192,7 +192,7 @@ def upload_db():
     print("shutdown started--->")
     try:
         data_base_body = open('clothe_store.db')
-        s3.put_object(Body=data_base_body, Bucket='clothapidb', key='clothe_store.db')
+        s3.put_object(Body=data_base_body, Bucket='clothapidb', Key='clothe_store.db')
         print('database downloaded successfully')
     except Exception as e:
         print("exception occurred while uploading db" + str(e))
@@ -233,7 +233,7 @@ def upload_db_to_filebase():
     print("uploading db")
     try:
         data_base_body = open('clothe_store.db')
-        s3.put_object(Body=data_base_body, Bucket='clothapidb', key='clothe_store.db')
+        s3.put_object(Body=data_base_body, Bucket='clothapidb', Key='clothe_store.db')
         return {'status': 'database downloaded successfully'}
     except Exception as e:
         print(str(e))
