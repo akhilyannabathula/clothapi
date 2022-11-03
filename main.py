@@ -23,6 +23,7 @@ from fastapi_utils.tasks import repeat_every
 
 from models.pydantic_models import GarmentType
 import boto3
+import requests
 
 app = FastAPI()
 
@@ -166,6 +167,9 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 # @repeat_every(seconds=5)
 # def check_health():
 #     print("calling health")
+#     response = requests.get(url='https://cloth-api.onrender.com/health')
+#     print(response)
+
 
 
 @app.on_event("startup")
@@ -233,7 +237,7 @@ def upload_db_to_filebase():
     print("uploading db")
     try:
         data_base_body = open('clothe_store.db')
-        s3.put_object(Body=data_base_body, Bucket='clothapidb', Key='clothe_store.db')
+        s3.upload_file('clothe_store.db','clothapidb','clothe_store.db')
         return {'status': 'database downloaded successfully'}
     except Exception as e:
         print(str(e))
