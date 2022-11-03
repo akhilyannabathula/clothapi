@@ -171,7 +171,6 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 #     print(response)
 
 
-
 @app.on_event("startup")
 def download_db():
     print('startup event')
@@ -195,9 +194,8 @@ def upload_db():
                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
     print("shutdown started--->")
     try:
-        data_base_body = open('clothe_store.db')
-        s3.put_object(Body=data_base_body, Bucket='clothapidb', Key='clothe_store.db')
-        print('database downloaded successfully')
+        s3.upload_file('clothe_store.db','clothapidb','clothe_store.db')
+        print('database uploaded successfully')
     except Exception as e:
         print("exception occurred while uploading db" + str(e))
     finally:
@@ -236,9 +234,8 @@ def upload_db_to_filebase():
                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
     print("uploading db")
     try:
-        data_base_body = open('clothe_store.db')
         s3.upload_file('clothe_store.db','clothapidb','clothe_store.db')
-        return {'status': 'database downloaded successfully'}
+        return {'status': 'database uploaded successfully'}
     except Exception as e:
         print(str(e))
         return {'exception': str(e)}
