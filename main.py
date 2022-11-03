@@ -17,7 +17,6 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, HT
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-import datetime
 import pandas as pd
 from fastapi_utils.tasks import repeat_every
 
@@ -127,11 +126,11 @@ def authenticate_user(fake_db, username: str, password: str):
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
     to_encode = data.copy()
-    # if expires_delta:
-    #     expire = datetime.utcnow() + expires_delta
-    # else:
-    #     expire = datetime.utcnow() + timedelta(minutes=15)
-    # to_encode.update({"exp": expire})
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -182,6 +181,8 @@ def download_db():
         print("exception occurred downloading db ->" + str(e))
         Base.metadata.create_all(bind=engine)
         print('database created locally')
+    finally:
+        print('application started')
 
 
 @app.on_event("shutdown")
