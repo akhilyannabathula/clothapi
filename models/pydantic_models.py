@@ -28,6 +28,8 @@ class Item(BaseModel):
     description: Optional[str] = None
     order_id: int
     sold_price: int
+    actual_price: int = 0
+    brand: Optional[str] = None
     size: Optional[str] = None
     source: Optional[GarmentSource] = GarmentSource.BANGLORE
 
@@ -58,6 +60,8 @@ class ItemCreate(BaseModel):
     item_type: GarmentType
     description: Optional[str] = None
     sold_price: int
+    actual_price: int = 0
+    brand: Optional[str] = None
     source: Optional[GarmentSource] = GarmentSource.BANGLORE
     size: Optional[str] = 'S'
 
@@ -72,3 +76,26 @@ class OrdersCreate(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ItemOut(BaseModel):
+    id: int
+    item_type: GarmentType
+    description: Optional[str] = None
+    order_id: int
+    sold_price: int
+    size: Optional[str] = None
+    source: Optional[GarmentSource] = GarmentSource.BANGLORE
+
+    class Config:
+        orm_mode = True
+
+class OrdersOut(BaseModel):
+    id: int
+    customer_name: str
+    items: List[ItemOut]
+    phone_number: str
+
+    class Config:
+        orm_mode = True
+
+

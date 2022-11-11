@@ -334,7 +334,9 @@ def get_recent_items(db: Session = Depends(get_db), from_date: datetime.date = N
                 [key, int(value)] for key, value in dict(filtered_data['size'].value_counts()).items())
             size_stats[garment_type.value]['total'] = filtered_data.shape[0]
             price_stats[garment_type.value] = int(filtered_data['sold_price'].sum())
-        price_stats['total'] = int(data['sold_price'].sum())
+        price_stats['SP_total'] = int(data['sold_price'].sum())
+        price_stats['AP_total'] = int(data['actual_price'].sum())
+        price_stats['profit'] = price_stats['SP_total'] - price_stats['AP_total']
         print(size_stats)
         return {"size_stats": size_stats, "price_stats": price_stats}
     except Exception as e:

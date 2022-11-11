@@ -25,6 +25,8 @@ class Items(Base):
     date = Column(Date, default=datetime.date.today())
     order_id = Column(Integer, ForeignKey("orders.id"))
     sold_price = Column(Integer)
+    actual_price = Column(Integer)
+    brand = Column(String)
     source = Column(String)
     size = Column(String)
     order = relationship("Orders", back_populates="items")
