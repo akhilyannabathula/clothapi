@@ -260,7 +260,7 @@ def get_all_orders(db: Session = Depends(get_db), current_user: User = Depends(g
     return order_repository.get_orders(db)
 
 
-@app.get("/recent_orders", response_model=pydantic_models.OrdersOut)
+@app.get("/recent_orders", response_model=list[pydantic_models.OrdersOut])
 def get_recent_orders(db: Session = Depends(get_db), from_date: Optional[datetime.date] = None,
                       to_date: Optional[datetime.date] = datetime.date.today(),
                       current_user: User = Depends(get_current_active_user)):
