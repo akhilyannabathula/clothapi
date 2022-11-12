@@ -9,7 +9,7 @@ from database.crudrepo import order_repository
 from database.config.dbconfig import SessionLocal, engine, Base
 from database.entities import models
 from fastapi.responses import FileResponse
-from datetime import  timedelta
+from datetime import timedelta
 from typing import Union, Optional
 import datetime
 
@@ -163,12 +163,15 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 
-# @app.on_event("startup")
-# @repeat_every(seconds=60*10)
-# async def check_health():
-#     print("calling health")
-#     response = requests.get(url='https://cloth-api.onrender.com/health')
-#     print(response)
+@app.on_event("startup")
+@repeat_every(seconds=60 * 10)
+async def check_health():
+    try:
+        print("calling health")
+        response = requests.get(url='https://cloth-api.onrender.com/health')
+        print(response)
+    except Exception as e:
+        print("exception " + str(e))
 
 
 @app.on_event("startup")
@@ -196,7 +199,7 @@ def upload_db():
     try:
         # body = open(file='clothe_store.db', mode='rb', encoding='utf-8')
         # s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
-        s3.upload_file('clothe_store.db','clothapidb','clothe_store.db')
+        s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
         print('database uploaded successfully')
     except Exception as e:
         print("exception occurred while uploading db" + str(e))
@@ -236,7 +239,7 @@ def upload_db_to_filebase():
                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
     print("uploading db")
     try:
-        s3.upload_file('clothe_store.db','clothapidb','clothe_store.db')
+        s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
         return {'status': 'database uploaded successfully'}
     except Exception as e:
         print(str(e))
@@ -257,7 +260,7 @@ def get_all_orders(db: Session = Depends(get_db), current_user: User = Depends(g
     return order_repository.get_orders(db)
 
 
-@app.get("/recent_orders")
+@app.get("/recent_orders", response_model=pydantic_models.OrdersOut)
 def get_recent_orders(db: Session = Depends(get_db), from_date: Optional[datetime.date] = None,
                       to_date: Optional[datetime.date] = datetime.date.today(),
                       current_user: User = Depends(get_current_active_user)):
