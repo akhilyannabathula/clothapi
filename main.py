@@ -168,7 +168,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 async def check_health():
     try:
         print("calling health")
-        response = requests.get(url='https://cloth-api.onrender.com/health')
+        response = requests.get(url='https://cloth-api.onrender.com/health', timeout=5)
         print(response)
     except Exception as e:
         print("exception " + str(e))
