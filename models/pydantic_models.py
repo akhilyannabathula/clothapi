@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel
@@ -85,6 +86,8 @@ class ItemOut(BaseModel):
     order_id: int
     sold_price: int
     size: Optional[str] = None
+    brand: Optional[str] = None
+    date: datetime.date = None
     source: Optional[GarmentSource] = GarmentSource.BANGLORE
 
     class Config:
