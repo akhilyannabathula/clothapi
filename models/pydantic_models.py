@@ -7,12 +7,13 @@ class GarmentType(str, Enum):
     TSHIR = "tshirt"
     JEAN = "jean"
     SHIRT = "shirt"
+    SHORT = "short"
     HOODIE = "hoodie"
     UNDERWEAR = "underwear"
-    COLLAR_TSHIR = "collar-tshirt"
-    SWEAT_SHIRT = "sweatshirt"
+    CT = "collar-tshirt"
+    TROUSER = "trouser"
     OTHER = "other"
-
+    SWEAT_SHIRT = "sweatshirt"
 
 
 
