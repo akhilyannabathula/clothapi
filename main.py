@@ -163,48 +163,48 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 
-# @app.on_event("startup")
-# @repeat_every(seconds=60 * 10)
-# async def check_health():
-#     try:
-#         print("calling health")
-#         response = requests.get(url='https://cloth-api.onrender.com/health', timeout=5)
-#         print(response)
-#     except Exception as e:
-#         print("exception " + str(e))
-#
-#
-# @app.on_event("startup")
-# def download_db():
-#     print('startup event')
-#     s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
-#                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
-#     print("following is th bucket list")
-#     print(s3.list_buckets())
-#     try:
-#         s3.download_file('clothapidb', 'clothe_store.db', 'clothe_store.db')
-#         print('database downloaded successfully')
-#     except Exception as e:
-#         print("exception occurred downloading db ->" + str(e))
-#         print('database created locally')
-#     finally:
-#         print('application started')
-#
-#
-# @app.on_event("shutdown")
-# def upload_db():
-#     s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
-#                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
-#     print("shutdown started--->")
-#     try:
-#         # body = open(file='clothe_store.db', mode='rb', encoding='utf-8')
-#         # s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
-#         s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
-#         print('database uploaded successfully')
-#     except Exception as e:
-#         print("exception occurred while uploading db" + str(e))
-#     finally:
-#         print("application closed")
+@app.on_event("startup")
+@repeat_every(seconds=60 * 10)
+async def check_health():
+    try:
+        print("calling health")
+        response = requests.get(url='https://cloth-api.onrender.com/health', timeout=5)
+        print(response)
+    except Exception as e:
+        print("exception " + str(e))
+
+
+@app.on_event("startup")
+def download_db():
+    print('startup event')
+    s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
+                      aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
+    print("following is th bucket list")
+    print(s3.list_buckets())
+    try:
+        s3.download_file('clothapidb', 'clothe_store.db', 'clothe_store.db')
+        print('database downloaded successfully')
+    except Exception as e:
+        print("exception occurred downloading db ->" + str(e))
+        print('database created locally')
+    finally:
+        print('application started')
+
+
+@app.on_event("shutdown")
+def upload_db():
+    s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
+                      aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
+    print("shutdown started--->")
+    try:
+        # body = open(file='clothe_store.db', mode='rb', encoding='utf-8')
+        # s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
+        s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
+        print('database uploaded successfully')
+    except Exception as e:
+        print("exception occurred while uploading db" + str(e))
+    finally:
+        print("application closed")
 
 
 @app.post("/token", response_model=Token)
