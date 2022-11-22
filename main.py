@@ -163,48 +163,48 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     return current_user
 
 
-@app.on_event("startup")
-@repeat_every(seconds=60 * 10)
-async def check_health():
-    try:
-        print("calling health")
-        response = requests.get(url='https://cloth-api.onrender.com/health', timeout=5)
-        print(response)
-    except Exception as e:
-        print("exception " + str(e))
-
-
-@app.on_event("startup")
-def download_db():
-    print('startup event')
-    s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
-                      aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
-    print("following is th bucket list")
-    print(s3.list_buckets())
-    try:
-        s3.download_file('clothapidb', 'clothe_store.db', 'clothe_store.db')
-        print('database downloaded successfully')
-    except Exception as e:
-        print("exception occurred downloading db ->" + str(e))
-        print('database created locally')
-    finally:
-        print('application started')
-
-
-@app.on_event("shutdown")
-def upload_db():
-    s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
-                      aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
-    print("shutdown started--->")
-    try:
-        # body = open(file='clothe_store.db', mode='rb', encoding='utf-8')
-        # s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
-        s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
-        print('database uploaded successfully')
-    except Exception as e:
-        print("exception occurred while uploading db" + str(e))
-    finally:
-        print("application closed")
+# @app.on_event("startup")
+# @repeat_every(seconds=60 * 10)
+# async def check_health():
+#     try:
+#         print("calling health")
+#         response = requests.get(url='https://cloth-api.onrender.com/health', timeout=5)
+#         print(response)
+#     except Exception as e:
+#         print("exception " + str(e))
+#
+#
+# @app.on_event("startup")
+# def download_db():
+#     print('startup event')
+#     s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
+#                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
+#     print("following is th bucket list")
+#     print(s3.list_buckets())
+#     try:
+#         s3.download_file('clothapidb', 'clothe_store.db', 'clothe_store.db')
+#         print('database downloaded successfully')
+#     except Exception as e:
+#         print("exception occurred downloading db ->" + str(e))
+#         print('database created locally')
+#     finally:
+#         print('application started')
+#
+#
+# @app.on_event("shutdown")
+# def upload_db():
+#     s3 = boto3.client('s3', endpoint_url='https://s3.filebase.com', aws_access_key_id="17745D8DAD09B5073234",
+#                       aws_secret_access_key="jsM20sdTVF2blheXICmeVWoaWpa2GFLdrBm15JPW")
+#     print("shutdown started--->")
+#     try:
+#         # body = open(file='clothe_store.db', mode='rb', encoding='utf-8')
+#         # s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
+#         s3.upload_file('clothe_store.db', 'clothapidb', 'clothe_store.db')
+#         print('database uploaded successfully')
+#     except Exception as e:
+#         print("exception occurred while uploading db" + str(e))
+#     finally:
+#         print("application closed")
 
 
 @app.post("/token", response_model=Token)
@@ -331,27 +331,49 @@ def download_database_file(current_user: User = Depends(get_current_active_user)
 
 @app.get("/stats")
 def get_recent_items(db: Session = Depends(get_db), from_date: datetime.date = None,
-                     to_date: Optional[datetime.date] = datetime.date.today()):
-    try:
-        if from_date is None:
-            from_date = get_date()
-        data = pd.read_sql(db.query(models.Items).filter(models.Items.date.between(from_date, to_date)).statement,
-                           db.bind)
-        size_stats = {}
-        price_stats = {}
-        for garment_type in GarmentType:
-            filtered_data = data[data['item_type'] == garment_type.value]
-            size_stats[garment_type.value] = dict(
-                [key, int(value)] for key, value in dict(filtered_data['size'].value_counts()).items())
-            size_stats[garment_type.value]['total'] = filtered_data.shape[0]
-            price_stats[garment_type.value] = int(filtered_data['sold_price'].sum())
-        price_stats['SP_total'] = int(data['sold_price'].sum())
-        price_stats['AP_total'] = int(data['actual_price'].sum())
-        price_stats['LP_total'] = price_stats['SP_total'] - price_stats['AP_total']
-        print(size_stats)
-        return {"size_stats": size_stats, "price_stats": price_stats}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+                     to_date: Optional[datetime.date] = datetime.date.today(), order_id: int  = None):
+    if order_id is None:
+        try:
+            if from_date is None:
+                from_date = get_date()
+            data = pd.read_sql(db.query(models.Items).filter(models.Items.date.between(from_date, to_date)).statement,
+                               db.bind)
+            size_stats = {}
+            price_stats = {}
+            for garment_type in GarmentType:
+                filtered_data = data[data['item_type'] == garment_type.value]
+                size_stats[garment_type.value] = dict(
+                    [key, int(value)] for key, value in dict(filtered_data['size'].value_counts()).items())
+                size_stats[garment_type.value]['total'] = filtered_data.shape[0]
+                price_stats[garment_type.value] = int(filtered_data['sold_price'].sum())
+            price_stats['SP_total'] = int(data['sold_price'].sum())
+            price_stats['AP_total'] = int(data['actual_price'].sum())
+            price_stats['LP_total'] = price_stats['SP_total'] - price_stats['AP_total']
+            print(size_stats)
+            return {"size_stats": size_stats, "price_stats": price_stats}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        try:
+            if from_date is None:
+                from_date = get_date()
+            data = pd.read_sql(db.query(models.Items).filter(models.Items.date.between(from_date, to_date), models.Items.order_id == order_id ).statement,
+                               db.bind)
+            size_stats = {}
+            price_stats = {}
+            for garment_type in GarmentType:
+                filtered_data = data[data['item_type'] == garment_type.value]
+                size_stats[garment_type.value] = dict(
+                    [key, int(value)] for key, value in dict(filtered_data['size'].value_counts()).items())
+                size_stats[garment_type.value]['total'] = filtered_data.shape[0]
+                price_stats[garment_type.value] = int(filtered_data['sold_price'].sum())
+            price_stats['SP_total'] = int(data['sold_price'].sum())
+            price_stats['AP_total'] = int(data['actual_price'].sum())
+            price_stats['LP_total'] = price_stats['SP_total'] - price_stats['AP_total']
+            print(size_stats)
+            return {"size_stats": size_stats, "price_stats": price_stats}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
