@@ -65,6 +65,7 @@ class ItemCreate(BaseModel):
     actual_price: int = 0
     brand: Optional[str] = None
     source: Optional[GarmentSource] = GarmentSource.BANGLORE
+    date: Optional[datetime.date] = None
     size: Optional[str] = 'S'
 
     class Config:

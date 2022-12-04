@@ -7,8 +7,9 @@ from database.entities import models
 
 
 def create_order(db: Session, order: pydantic_models.OrdersCreate):
-    db_order = models.Orders(customer_name=order.customer_name, phone_number=order.phone_number)
+    db_order = models.Orders(customer_name=order.customer_name, phone_number=order.phone_number, date=datetime.date.today())
     for item in order.items:
+        item.date = datetime.date.today()
         db_order.items.append(models.Items(**item.dict()))
     print(db_order)
     db.add(db_order)
